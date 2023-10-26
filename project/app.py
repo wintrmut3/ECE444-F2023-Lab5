@@ -1,6 +1,7 @@
 import sqlite3
+import json
+from flask import Flask, g, render_template, request, session, flash, redirect, url_for, abort, jsonify
 
-from flask import Flask, g, render_template, request, session, flash, redirect, url_for, abort
 DATABASE = "flaskr.db"
 USERNAME = "admin"
 PASSWORD = "admin"
@@ -9,7 +10,6 @@ SECRET_KEY = "change_me"
 app = Flask(__name__)
 app.config.from_object(__name__)
 # configuration
-
 
 
 # connect to database
@@ -86,6 +86,19 @@ def index():
     cur = db.execute('select * from entries order by id desc')
     entries = cur.fetchall()
     return render_template('index.html', entries=entries)
+
+@app.route('/delete/<post_id>', methods=['GET'])
+def delete_entry(post_id):
+    """Delete post from database"""
+    result = {'status': 0, 'message': 'Error'}
+    try:
+        db = get_db()
+        db.execute('delete from entries where id=' + post_id)
+        db.commit()
+        result = {'status': 1, 'message': "Post Deleted"}
+    except Exception as e:
+        result = {'status': 0, 'message': repr(e)}
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run()
