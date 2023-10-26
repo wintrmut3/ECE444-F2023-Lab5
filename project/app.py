@@ -1,16 +1,16 @@
 import sqlite3
 
-from flask import Flask, g, render_template, request, session, flash, redirect, url_for
-DATABASE = "flaskr.db"
-
-# create and initialize a new Flask app
-app = Flask(__name__)
-app.config.from_object(__name__)
-# configuration
+from flask import Flask, g, render_template, request, session, flash, redirect, url_for, abort
 DATABASE = "flaskr.db"
 USERNAME = "admin"
 PASSWORD = "admin"
 SECRET_KEY = "change_me"
+# create and initialize a new Flask app
+app = Flask(__name__)
+app.config.from_object(__name__)
+# configuration
+
+
 
 # connect to database
 def connect_db():
@@ -65,6 +65,19 @@ def close_db(error):
     if hasattr(g, "sqlite_db"):
         g.sqlite_db.close()
 
+@app.route('/add', methods=['POST'])
+def add_entry():
+    """Add new post to database."""
+    if not session.get('logged_in'):
+        abort(401)
+    db = get_db()
+    db.execute(
+        'insert into entries (title, text) values (?, ?)',
+        [request.form['title'], request.form['text']]
+    )
+    db.commit()
+    flash('New entry was successfully posted')
+    return redirect(url_for('index'))
 
 @app.route('/')
 def index():
